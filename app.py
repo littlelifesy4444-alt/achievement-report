@@ -28,6 +28,18 @@ MANUAL_RULES = """
 
 1. 모든 문항을 문항번호별로 분석한다.
 2. 각 문항에 '문항 분석 영역', '핵심 출제 포인트'를 작성한다.
+   문항 분석 영역은 아래 11개 대분류 중 하나만 사용한다.
+   - 문장의 형식·동사: 1~5형식, 목적격보어, 사역/지각동사, 동사별 문형, 가주어·문장구조
+   - 시제: 현재/과거/미래, 진행, 완료, 시간 부사절
+   - 조동사: can, may, must, should, have to, 조동사+완료형
+   - 수동태: be p.p. 및 수동 관련 표현
+   - 준동사: to부정사, 동명사, 현재분사/과거분사, 완료부정사
+   - 품사·어휘: 품사 구별, 접속사, 어휘 결합 및 일반 어법
+   - 관계사: 관계대명사, 관계부사 및 관계사 구문
+   - 전치사: 전치사 선택과 전치사 결합 표현
+   - 비교 표현: 원급, 비교급, 최상급 및 비교 구문
+   - 도치·특수구문·화법: 도치, 강조, 생략, 병렬, 일치, 직접/간접화법 등
+   - 기타 문법·구문: 위 영역으로 자연스럽게 분류되지 않는 문법
 3. 공식 정답표가 있으면 반드시 우선 적용한다.
 4. 공식 정답표가 없으면 시험지를 분석해 정답을 판단하되, 정답이 모호하거나 복수 정답 가능성이 있으면 추측하지 않고
    '확인 필요' 또는 '채점 제외'로 처리한다.
@@ -40,13 +52,13 @@ MANUAL_RULES = """
 10. 맞은 문항의 학생 진단은 공란으로 둔다.
 11. 틀린 문항의 학생 진단은 정답 자체를 알려주기보다 '시제 구별 보완 필요', '목적격보어 형태 확인 필요'처럼
     짧고 구체적인 학습 포인트를 제시한다.
-12. 객관식 문항의 '분석 근거' 칸은 반드시 공란으로 둔다.
-13. '분석 근거'는 서술형 문항에만 표시한다.
+12. 객관식 문항도 '분석 근거'를 표시한다. 단, 정답 근거를 짧고 명확하게 작성하고 문제 전체 문장을 재현하지 않는다.
+13. 서술형 분석 근거는 전체 정답 문장이 아니라 채점에 필요한 부분답만 짧게 표시한다.
 14. 서술형의 전체 기준답안과 학생이 작성한 전체 답안은 리포트에 공개하지 않는다.
-15. 서술형 분석 근거에는 채점에 필요한 '부분답'만 짧게 표시한다.
 16. 틀린 서술형에만 짧은 오류 진단을 작성한다.
 17. 영역별 표에는 영역 / 정답 / 채점 문항 / 정답률 / 판정을 표시한다.
-18. 강점과 보완 영역은 실제 정답률을 근거로 정한다.
+18. 강점과 보완 영역은 실제 정답률과 해당 영역의 채점 문항 수를 함께 고려한다.
+   채점 문항이 1~2개뿐인 영역은 '참고'로 표시하고 강점/보완 영역 자동 선정에서는 우선 제외한다.
 19. 오답이 집중된 영역과 상대적으로 안정적인 영역을 실제 계산 결과에서 찾는다.
 20. 종합 코멘트는 '현재 성취 수준 → 강점 → 보완 영역 → 구체적 복습 방향' 순으로 작성한다.
 21. 학생의 태도, 노력, 성격, 수업 참여도 등 답안지에서 확인할 수 없는 내용은 추정하지 않는다.
@@ -69,7 +81,7 @@ class QuestionAnalysis(BaseModel):
     number: int
     question_type: Literal["objective", "subjective"]
     points: float = Field(description="문항 배점. 시험지에서 확인 불가하면 0.")
-    area: str
+    area: Literal["문장의 형식·동사", "시제", "조동사", "수동태", "준동사", "품사·어휘", "관계사", "전치사", "비교 표현", "도치·특수구문·화법", "기타 문법·구문"]
     point: str
     answer_status: Literal["certain", "confirm", "exclude"]
     correct_answer: str = Field(description="객관식 정답 번호 또는 서술형 채점에 필요한 부분답만. 전체 정답문장 금지.")
@@ -177,7 +189,7 @@ def grade_student(api_key: str, exam: ExamAnalysis, answer_file) -> StudentGradi
           "- 학생 답안이 안 보이거나 판독이 불확실하면 추측하지 말고 confirm.\n"
           "- correct 문항의 diagnosis는 반드시 빈 문자열.\n"
           "- wrong 문항의 diagnosis는 짧고 구체적인 학습 포인트.\n"
-          "- 객관식의 evidence는 리포트에 표시하지 않는다.\n"
+          "- 객관식 evidence도 정답 판단 근거를 짧게 작성한다. 문제 전체 문장을 복사하지 않는다.\n"
           "- 서술형 evidence에 학생의 전체 답안을 옮기지 말고 채점에 필요한 부분만 표시.\n"
           "- 학생 이름/반은 답안지와 파일명에서 확인되는 정보만 사용."
     )
@@ -264,12 +276,11 @@ def calculate(exam: ExamAnalysis, grading: StudentGrading):
                 areas[q.area]["correct"] += 1
                 areas[q.area]["score"] += pts
 
-        # 객관식 분석근거는 최종 리포트에서 사용하지 않음
-        evidence = ""
-        if q.question_type == "subjective":
-            evidence = q.evidence
-            if item and item.evidence.strip():
-                evidence = item.evidence.strip()
+        # 객관식/서술형 모두 분석근거 표시.
+        # 서술형은 전체 답안이 아닌 채점에 필요한 부분답만 사용한다.
+        evidence = q.evidence
+        if item and item.evidence.strip():
+            evidence = item.evidence.strip()
 
         diagnosis = q.wrong_diagnosis
         if item and item.diagnosis.strip():
@@ -299,7 +310,7 @@ def calculate(exam: ExamAnalysis, grading: StudentGrading):
                 "correct": s["correct"],
                 "count": s["count"],
                 "rate": ar,
-                "judgment": judgment(ar),
+                "judgment": "참고" if s["count"] < 3 else judgment(ar),
             }
         )
     area_rows.sort(key=lambda x: (x["rate"], -x["count"], x["area"]))
@@ -333,7 +344,7 @@ def cell_text(cell, text, *, bold=False, color=None, align=None, size=7.5):
     cell.text = ""
     p = cell.paragraphs[0]
     p.paragraph_format.space_before = Pt(0)
-    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.space_after = Pt(1)
     if align is not None:
         p.alignment = align
     r = p.add_run(str(text))
@@ -376,26 +387,35 @@ def comment_text(result):
     if not result["areas"]:
         return "채점 가능한 문항이 없어 종합 학습 코멘트를 산출할 수 없습니다."
 
-    best = max(result["areas"], key=lambda x: (x["rate"], x["count"]))
-    weak = min(result["areas"], key=lambda x: (x["rate"], -x["count"]))
+    reliable = [a for a in result["areas"] if a["count"] >= 3]
+    pool = reliable if reliable else result["areas"]
 
-    diags = []
+    best = max(pool, key=lambda x: (x["rate"], x["count"]))
+    weak = min(pool, key=lambda x: (x["rate"], -x["count"]))
+
+    diag_counts = defaultdict(int)
     for row in result["rows"]:
-        if row["mark"] == "×" and row["diagnosis"] and row["diagnosis"] not in diags:
-            diags.append(row["diagnosis"])
+        if row["mark"] == "×" and row["diagnosis"]:
+            diag_counts[row["diagnosis"]] += 1
 
     review = ""
-    if diags:
-        review = " 우선 복습할 내용은 " + ", ".join(diags[:3]) + "입니다."
+    if diag_counts:
+        ranked = sorted(diag_counts.items(), key=lambda x: (-x[1], x[0]))[:3]
+        review = " 우선 복습할 내용은 " + ", ".join(
+            f"{d}({c}문항)" for d, c in ranked
+        ) + "입니다."
+
+    note = ""
+    if not reliable:
+        note = " 영역별 문항 수가 적어 강점·보완 영역 해석은 참고용입니다."
 
     return (
         f'{result["name"]} 학생은 채점 가능한 {result["graded"]}문항 중 '
         f'{result["correct"]}문항을 맞혀 정답률 {result["rate"]}%를 기록했습니다. '
-        f'상대적으로 안정적인 영역은 {best["area"]}({best["rate"]}%)이며, '
-        f'우선 보완이 필요한 영역은 {weak["area"]}({weak["rate"]}%)입니다.'
-        + review
+        f'상대적으로 안정적인 영역은 {best["area"]}({best["correct"]}/{best["count"]}, {best["rate"]}%)이며, '
+        f'우선 보완이 필요한 영역은 {weak["area"]}({weak["correct"]}/{weak["count"]}, {weak["rate"]}%)입니다.'
+        + review + note
     )
-
 
 def make_docx(exam: ExamAnalysis, result) -> bytes:
     doc = Document()
@@ -408,7 +428,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(8.3)
+    normal.font.size = Pt(9.3)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -421,23 +441,26 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
 
     summary = doc.add_table(rows=2, cols=7)
     summary.alignment = WD_TABLE_ALIGNMENT.CENTER
-    headers = ["학생", "반", "채점 문항", "정답", "오답", "정답률", "채점 점수"]
+    headers = ["학생", "반", "채점 문항", "정답", "정답률", "채점 점수", "보완 영역"]
+    reliable_areas = [a for a in result["areas"] if a["count"] >= 3]
+    summary_pool = reliable_areas if reliable_areas else result["areas"]
+    weak_area = min(summary_pool, key=lambda x: (x["rate"], -x["count"]))["area"] if summary_pool else "-"
     values = [
         result["name"],
         result["class"],
         result["graded"],
         result["correct"],
-        result["wrong"],
         f'{result["rate"]}%',
         f'{result["score"]}/{result["possible"]}',
+        weak_area,
     ]
     for i, h in enumerate(headers):
         cell_text(summary.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=7.8)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.3)
         shade(summary.cell(0, i), "1F4E79")
-        cell_text(summary.cell(1, i), values[i], bold=(i == 5),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=8.2)
-        if i == 5:
+        cell_text(summary.cell(1, i), values[i], bold=(i == 4),
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.7)
+        if i == 4:
             shade(summary.cell(1, i), "D9EAD3")
 
     notes = []
@@ -448,7 +471,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     if notes:
         p = doc.add_paragraph()
         rr = p.add_run("※ " + ", ".join(notes) + "은 정답률과 채점 가능 점수 계산에서 제외했습니다.")
-        rr.font.size = Pt(7.5)
+        rr.font.size = Pt(8.5)
 
     heading(doc, "1. 문항별 분석 및 정오표")
     tb = doc.add_table(rows=1, cols=6)
@@ -457,26 +480,26 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
 
     # 번호/정오 열은 매우 좁게, 설명 열은 넓게
     col_widths = [
-        Inches(0.38),  # 번호
-        Inches(1.15),  # 문항 분석
-        Inches(2.05),  # 핵심 출제 포인트
-        Inches(0.42),  # 정오
-        Inches(1.45),  # 분석 근거
-        Inches(1.85),  # 학생 진단
+        Inches(0.33),  # 번호: 아주 좁게
+        Inches(0.82),  # 문항 분석: 영역명 중심이라 좁게
+        Inches(2.25),  # 핵심 출제 포인트: 넓게
+        Inches(0.36),  # 정오: ○/×만 들어가도록 아주 좁게
+        Inches(2.10),  # 분석 근거: 객관식도 표시하므로 넓게
+        Inches(1.75),  # 학생 진단: 충분한 폭 확보
     ]
     set_column_widths(tb, col_widths)
 
     hdr = ["번호", "문항 분석", "핵심 출제 포인트", "정오", "분석 근거", "학생 진단"]
     for i, h in enumerate(hdr):
         cell_text(tb.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=7.0)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.0)
         shade(tb.cell(0, i), "1F4E79")
     repeat_header(tb.rows[0])
 
     for idx, rowdata in enumerate(result["rows"], 1):
         row = tb.add_row().cells
-        # 객관식 분석근거는 무조건 공란 / 서술형만 표시
-        evidence_to_show = rowdata["evidence"] if rowdata["question_type"] == "subjective" else ""
+        # 객관식과 서술형 모두 분석근거를 표시
+        evidence_to_show = rowdata["evidence"]
         vals = [
             rowdata["number"],
             rowdata["area"],
@@ -490,13 +513,13 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
                 row[j],
                 v,
                 align=WD_ALIGN_PARAGRAPH.CENTER if j in (0, 3) else WD_ALIGN_PARAGRAPH.LEFT,
-                size=6.8 if j not in (0,3) else 7.2,
+                size=8.8 if j not in (0,3) else 9.2,
             )
             row[j].width = col_widths[j]
 
         if idx % 2 == 0:
             for c in row:
-                shade(c, "F4F7FA")
+                shade(c, "EEF3F8")
         if rowdata["mark"] == "○":
             shade(row[3], "D9EAD3")
         elif rowdata["mark"] == "×":
@@ -505,16 +528,14 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
         else:
             shade(row[3], "FFF2CC")
 
-        # 서술형 분석근거 칸만 옅은 파랑
-        if rowdata["question_type"] == "subjective" and evidence_to_show:
-            shade(row[4], "DDEBF7")
+        # 분석근거는 객관식/서술형 모두 표시하되, 행 전체 교차 음영을 유지한다.
 
     heading(doc, "2. 영역별 성취도")
     at = doc.add_table(rows=1, cols=5)
     at.alignment = WD_TABLE_ALIGNMENT.CENTER
     for i, h in enumerate(["영역", "정답", "채점 문항", "정답률", "판정"]):
         cell_text(at.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=8)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9)
         shade(at.cell(0, i), "1F4E79")
     repeat_header(at.rows[0])
 
@@ -522,21 +543,28 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
         row = at.add_row().cells
         vals = [a["area"], a["correct"], a["count"], f'{a["rate"]}%', a["judgment"]]
         for j, v in enumerate(vals):
-            cell_text(row[j], v, align=WD_ALIGN_PARAGRAPH.CENTER if j else WD_ALIGN_PARAGRAPH.LEFT, size=8)
+            cell_text(row[j], v, align=WD_ALIGN_PARAGRAPH.CENTER if j else WD_ALIGN_PARAGRAPH.LEFT, size=9)
         if idx % 2 == 0:
             for c in row:
-                shade(c, "F4F7FA")
+                shade(c, "EEF3F8")
+
+    p = doc.add_paragraph()
+    p.paragraph_format.space_before = Pt(3)
+    p.paragraph_format.space_after = Pt(3)
+    rr = p.add_run("※ 채점 문항이 1~2개인 영역은 표본이 적어 판정을 '참고'로 표시합니다.")
+    rr.font.size = Pt(8.5)
 
     heading(doc, "3. 오답 기반 진단")
-    diags = []
+    diag_counts = defaultdict(int)
     for x in result["rows"]:
-        if x["mark"] == "×" and x["diagnosis"] and x["diagnosis"] not in diags:
-            diags.append(x["diagnosis"])
-    if diags:
-        for d in diags[:8]:
+        if x["mark"] == "×" and x["diagnosis"]:
+            diag_counts[x["diagnosis"]] += 1
+    if diag_counts:
+        ranked_diags = sorted(diag_counts.items(), key=lambda x: (-x[1], x[0]))[:8]
+        for d, count in ranked_diags:
             p = doc.add_paragraph()
             p.paragraph_format.space_after = Pt(2)
-            p.add_run("• " + d)
+            p.add_run(f"• {d} — 관련 오답 {count}문항")
     else:
         doc.add_paragraph("채점된 문항에서 별도 오답 진단 항목이 없습니다.")
 
@@ -694,7 +722,7 @@ if st.session_state.exam_analysis is not None:
                     "영역": q.area,
                     "출제 포인트": q.point,
                     "정답 상태": q.answer_status,
-                    "분석 근거": q.evidence if q.question_type == "subjective" else "",
+                    "분석 근거": q.evidence,
                 }
                 for q in exam.questions
             ],
