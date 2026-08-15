@@ -18,10 +18,21 @@ from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.section import WD_ORIENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 MODEL = "gpt-5.6"
+
+class MemoryUploadedFile:
+    """ZIP 안의 파일을 Streamlit UploadedFile처럼 다루기 위한 간단한 래퍼."""
+    def __init__(self, name: str, data: bytes):
+        self.name = name
+        self._data = data
+
+    def getvalue(self):
+        return self._data
+
 
 MANUAL_RULES = """
 성취도평가 학생 전달용 리포트 제작 기준
@@ -420,15 +431,18 @@ def comment_text(result):
 def make_docx(exam: ExamAnalysis, result) -> bytes:
     doc = Document()
     sec = doc.sections[0]
-    sec.top_margin = Inches(0.48)
-    sec.bottom_margin = Inches(0.48)
-    sec.left_margin = Inches(0.42)
-    sec.right_margin = Inches(0.42)
+    # A4 가로 방향: 긴 설명 열의 가독성을 확보
+    sec.orientation = WD_ORIENT.LANDSCAPE
+    sec.page_width, sec.page_height = sec.page_height, sec.page_width
+    sec.top_margin = Inches(0.38)
+    sec.bottom_margin = Inches(0.38)
+    sec.left_margin = Inches(0.35)
+    sec.right_margin = Inches(0.35)
 
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(9.3)
+    normal.font.size = Pt(10.0)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -480,19 +494,19 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
 
     # 번호/정오 열은 매우 좁게, 설명 열은 넓게
     col_widths = [
-        Inches(0.25),  # 번호: 최소 폭
-        Inches(0.65),  # 문항 분석: 확실히 축소
-        Inches(1.85),  # 핵심 출제 포인트
-        Inches(0.28),  # 정오: ○/×만 표시
-        Inches(2.85),  # 분석 근거: 가장 넓게
-        Inches(1.58),  # 학생 진단
+        Inches(0.34),  # 번호: 아주 좁게
+        Inches(0.82),  # 문항 분석: 영역명만 표시
+        Inches(2.20),  # 핵심 출제 포인트
+        Inches(0.40),  # 정오: ○/×/확인만 표시
+        Inches(4.15),  # 분석 근거: 가장 넓게
+        Inches(2.90),  # 학생 진단: 넓게
     ]
     set_column_widths(tb, col_widths)
 
     hdr = ["번호", "문항 분석", "핵심 출제 포인트", "정오", "분석 근거", "학생 진단"]
     for i, h in enumerate(hdr):
         cell_text(tb.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.0)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.5)
         shade(tb.cell(0, i), "1F4E79")
     repeat_header(tb.rows[0])
 
@@ -513,7 +527,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
                 row[j],
                 v,
                 align=WD_ALIGN_PARAGRAPH.CENTER if j in (0, 3) else WD_ALIGN_PARAGRAPH.LEFT,
-                size=8.8 if j not in (0,3) else 9.2,
+                size=9.5 if j not in (0,3) else 10.0,
             )
             row[j].width = col_widths[j]
 
@@ -623,7 +637,7 @@ with st.sidebar:
         help="웹앱에 서버 비밀키가 설정되어 있으면 입력하지 않아도 됩니다.",
     )
     st.info("공식 정답표가 있으면 함께 올리는 것이 가장 정확합니다.")
-    st.caption("학생 답안은 학생 1명당 PDF 1개를 권장합니다. 이미지 1장 답안은 JPG/PNG도 가능합니다.")
+    st.caption("학생 답안은 학생 1명당 파일 1개를 권장합니다. 여러 파일 동시 선택이 안 되면 ZIP 하나로 묶어 올리세요.")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -643,8 +657,37 @@ student_files = st.file_uploader(
     "③ 학생 답안 여러 개",
     type=["pdf", "png", "jpg", "jpeg", "webp"],
     accept_multiple_files=True,
-    help="학생 1명당 파일 1개로 올려 주세요. 예: 2-1_홍길동.pdf",
+    help="여러 파일 선택이 어려운 기기에서는 아래 ZIP 업로드를 사용하세요.",
 )
+
+student_zip = st.file_uploader(
+    "③-보조 학생 답안 ZIP 한꺼번에 올리기",
+    type=["zip"],
+    accept_multiple_files=False,
+    help="태블릿/휴대폰에서 여러 파일 동시 선택이 안 되면, 학생 답안들을 ZIP 하나로 묶어 올리세요.",
+)
+
+# ZIP이 올라오면 안의 PDF/JPG/PNG/WEBP를 학생 파일 목록에 추가
+if student_zip is not None:
+    try:
+        extracted = []
+        with zipfile.ZipFile(io.BytesIO(student_zip.getvalue())) as zf:
+            for info in zf.infolist():
+                if info.is_dir():
+                    continue
+                base = os.path.basename(info.filename)
+                if not base or base.startswith("."):
+                    continue
+                ext = os.path.splitext(base)[1].lower()
+                if ext in [".pdf", ".png", ".jpg", ".jpeg", ".webp"]:
+                    extracted.append(MemoryUploadedFile(base, zf.read(info)))
+        if extracted:
+            student_files = list(student_files or []) + extracted
+            st.caption(f"ZIP에서 학생 답안 {len(extracted)}개를 불러왔습니다.")
+        else:
+            st.warning("ZIP 안에서 지원되는 학생 답안 파일(PDF/JPG/PNG/WEBP)을 찾지 못했습니다.")
+    except zipfile.BadZipFile:
+        st.error("올린 파일이 정상적인 ZIP 파일이 아닙니다.")
 
 st.divider()
 
