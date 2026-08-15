@@ -21,6 +21,16 @@ from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.section import WD_ORIENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+
+pdfmetrics.registerFont(UnicodeCIDFont("HYSMyeongJo-Medium"))
 
 MODEL = "gpt-5.6"
 
@@ -388,7 +398,7 @@ def heading(doc, text):
     p.paragraph_format.space_after = Pt(4)
     r = p.add_run(text)
     r.bold = True
-    r.font.size = Pt(13)
+    r.font.size = Pt(12)
     r.font.color.rgb = RGBColor(31, 78, 121)
     r.font.name = "Malgun Gothic"
     r._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
@@ -442,13 +452,13 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(10.0)
+    normal.font.size = Pt(9.2)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = p.add_run(exam.title + "\n학생 학습 리포트")
     r.bold = True
-    r.font.size = Pt(18)
+    r.font.size = Pt(16.5)
     r.font.color.rgb = RGBColor(31, 78, 121)
     r.font.name = "Malgun Gothic"
     r._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
@@ -470,10 +480,10 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     ]
     for i, h in enumerate(headers):
         cell_text(summary.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.3)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=8.7)
         shade(summary.cell(0, i), "1F4E79")
         cell_text(summary.cell(1, i), values[i], bold=(i == 4),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.7)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.0)
         if i == 4:
             shade(summary.cell(1, i), "D9EAD3")
 
@@ -485,7 +495,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     if notes:
         p = doc.add_paragraph()
         rr = p.add_run("※ " + ", ".join(notes) + "은 정답률과 채점 가능 점수 계산에서 제외했습니다.")
-        rr.font.size = Pt(8.5)
+        rr.font.size = Pt(8.0)
 
     heading(doc, "1. 문항별 분석 및 정오표")
     tb = doc.add_table(rows=1, cols=6)
@@ -506,7 +516,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     hdr = ["번호", "문항 분석", "핵심 출제 포인트", "정오", "분석 근거", "학생 진단"]
     for i, h in enumerate(hdr):
         cell_text(tb.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9.5)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=8.8)
         shade(tb.cell(0, i), "1F4E79")
     repeat_header(tb.rows[0])
 
@@ -527,7 +537,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
                 row[j],
                 v,
                 align=WD_ALIGN_PARAGRAPH.CENTER if j in (0, 3) else WD_ALIGN_PARAGRAPH.LEFT,
-                size=9.5 if j not in (0,3) else 10.0,
+                size=8.8 if j not in (0,3) else 9.2,
             )
             row[j].width = col_widths[j]
 
@@ -549,7 +559,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     at.alignment = WD_TABLE_ALIGNMENT.CENTER
     for i, h in enumerate(["영역", "정답", "채점 문항", "정답률", "판정"]):
         cell_text(at.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=9)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=8.5)
         shade(at.cell(0, i), "1F4E79")
     repeat_header(at.rows[0])
 
@@ -557,7 +567,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
         row = at.add_row().cells
         vals = [a["area"], a["correct"], a["count"], f'{a["rate"]}%', a["judgment"]]
         for j, v in enumerate(vals):
-            cell_text(row[j], v, align=WD_ALIGN_PARAGRAPH.CENTER if j else WD_ALIGN_PARAGRAPH.LEFT, size=9)
+            cell_text(row[j], v, align=WD_ALIGN_PARAGRAPH.CENTER if j else WD_ALIGN_PARAGRAPH.LEFT, size=8.5)
         if idx % 2 == 0:
             for c in row:
                 shade(c, "EEF3F8")
@@ -566,7 +576,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     p.paragraph_format.space_before = Pt(3)
     p.paragraph_format.space_after = Pt(3)
     rr = p.add_run("※ 채점 문항이 1~2개인 영역은 표본이 적어 판정을 '참고'로 표시합니다.")
-    rr.font.size = Pt(8.5)
+    rr.font.size = Pt(8.0)
 
     heading(doc, "3. 오답 기반 진단")
     diag_counts = defaultdict(int)
@@ -588,6 +598,186 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
+
+
+
+def _pdf_p(text, style):
+    """ReportLab Paragraph helper with safe text conversion."""
+    s = str(text if text is not None else "")
+    s = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    s = s.replace("\n", "<br/>")
+    return Paragraph(s, style)
+
+
+def make_pdf(exam: ExamAnalysis, result) -> bytes:
+    """Create a print-stable A4 landscape PDF directly, independent of Google Docs."""
+    buf = io.BytesIO()
+    page_w, page_h = landscape(A4)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=landscape(A4),
+        leftMargin=0.30 * inch,
+        rightMargin=0.30 * inch,
+        topMargin=0.20 * inch,
+        bottomMargin=0.20 * inch,
+        title=f'{result["name"]} 학생 학습 리포트',
+    )
+
+    font = "HYSMyeongJo-Medium"
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "KTitle", parent=styles["Title"], fontName=font, fontSize=15,
+        leading=16, alignment=TA_CENTER, textColor=colors.HexColor("#1F4E79"),
+        spaceAfter=7,
+    )
+    heading_style = ParagraphStyle(
+        "KHeading", parent=styles["Heading2"], fontName=font, fontSize=11,
+        leading=11.5, textColor=colors.HexColor("#1F4E79"), spaceBefore=6, spaceAfter=4,
+    )
+    body = ParagraphStyle(
+        "KBody", parent=styles["BodyText"], fontName=font, fontSize=7.9,
+        leading=8.6, alignment=TA_LEFT,
+    )
+    body_center = ParagraphStyle(
+        "KCenter", parent=body, alignment=TA_CENTER,
+    )
+    small = ParagraphStyle(
+        "KSmall", parent=body, fontSize=7.2, leading=8.0,
+    )
+    header_style = ParagraphStyle(
+        "KHeader", parent=body_center, fontSize=7.8, leading=8.4,
+        textColor=colors.white,
+    )
+
+    story = []
+    story.append(_pdf_p(exam.title + "<br/>학생 학습 리포트", title_style))
+
+    reliable_areas = [a for a in result["areas"] if a["count"] >= 3]
+    summary_pool = reliable_areas if reliable_areas else result["areas"]
+    weak_area = min(summary_pool, key=lambda x: (x["rate"], -x["count"]))["area"] if summary_pool else "-"
+
+    sh = ["학생", "반", "채점 문항", "정답", "정답률", "채점 점수", "보완 영역"]
+    sv = [
+        result["name"], result["class"], result["graded"], result["correct"],
+        f'{result["rate"]}%', f'{result["score"]}/{result["possible"]}', weak_area
+    ]
+    summary_data = [
+        [_pdf_p(x, header_style) for x in sh],
+        [_pdf_p(x, body_center) for x in sv],
+    ]
+    usable = page_w - 0.60 * inch
+    summary = Table(summary_data, colWidths=[usable / 7.0] * 7, repeatRows=1)
+    summary.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#1F4E79")),
+        ("BACKGROUND", (4,1), (4,1), colors.HexColor("#D9EAD3")),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("ALIGN", (0,0), (-1,-1), "CENTER"),
+        ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#B7C9D6")),
+        ("LEFTPADDING", (0,0), (-1,-1), 2.5),
+        ("RIGHTPADDING", (0,0), (-1,-1), 2.5),
+        ("TOPPADDING", (0,0), (-1,-1), 1.2),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 1.2),
+    ]))
+    story.append(summary)
+
+    notes = []
+    if result["excluded"]:
+        notes.append(f'채점 제외 {result["excluded"]}문항')
+    if result["confirm"]:
+        notes.append(f'확인 필요 {result["confirm"]}문항')
+    if notes:
+        story.append(Spacer(1, 1.5))
+        story.append(_pdf_p("※ " + ", ".join(notes) + "은 정답률과 채점 가능 점수 계산에서 제외했습니다.", small))
+
+    story.append(_pdf_p("1. 문항별 분석 및 정오표", heading_style))
+
+    # Requested fixed proportions: 4 / 10 / 29 / 5 / 30 / 22 = 100%
+    proportions = [0.04, 0.10, 0.29, 0.05, 0.30, 0.22]
+    widths = [usable * p for p in proportions]
+    headers = ["번호", "문항 분석", "핵심 출제 포인트", "정오", "분석 근거", "학생 진단"]
+    data = [[_pdf_p(x, header_style) for x in headers]]
+
+    for rowdata in result["rows"]:
+        vals = [
+            rowdata["number"], rowdata["area"], rowdata["point"], rowdata["mark"],
+            rowdata["evidence"], rowdata["diagnosis"],
+        ]
+        data.append([
+            _pdf_p(vals[0], body_center),
+            _pdf_p(vals[1], body),
+            _pdf_p(vals[2], body),
+            _pdf_p(vals[3], body_center),
+            _pdf_p(vals[4], body),
+            _pdf_p(vals[5], body),
+        ])
+
+    table = Table(data, colWidths=widths, repeatRows=1, hAlign="CENTER")
+    ts = [
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#1F4E79")),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#B7C9D6")),
+        ("LEFTPADDING", (0,0), (-1,-1), 2.2),
+        ("RIGHTPADDING", (0,0), (-1,-1), 2.2),
+        ("TOPPADDING", (0,0), (-1,-1), 1.0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 1.0),
+    ]
+    for i, rowdata in enumerate(result["rows"], start=1):
+        if i % 2 == 0:
+            ts.append(("BACKGROUND", (0,i), (-1,i), colors.HexColor("#EEF3F8")))
+        if rowdata["mark"] == "○":
+            ts.append(("BACKGROUND", (3,i), (3,i), colors.HexColor("#D9EAD3")))
+        elif rowdata["mark"] == "×":
+            ts.append(("BACKGROUND", (3,i), (3,i), colors.HexColor("#FCE4D6")))
+            ts.append(("BACKGROUND", (5,i), (5,i), colors.HexColor("#FFF2CC")))
+        else:
+            ts.append(("BACKGROUND", (3,i), (3,i), colors.HexColor("#FFF2CC")))
+    table.setStyle(TableStyle(ts))
+    story.append(table)
+
+    story.append(_pdf_p("2. 영역별 성취도", heading_style))
+    area_headers = ["영역", "정답", "채점 문항", "정답률", "판정"]
+    area_data = [[_pdf_p(x, header_style) for x in area_headers]]
+    for a in result["areas"]:
+        area_data.append([
+            _pdf_p(a["area"], body), _pdf_p(a["correct"], body_center),
+            _pdf_p(a["count"], body_center), _pdf_p(f'{a["rate"]}%', body_center),
+            _pdf_p(a["judgment"], body_center),
+        ])
+    at = Table(area_data, colWidths=[usable*0.42, usable*0.12, usable*0.16, usable*0.15, usable*0.15], repeatRows=1)
+    ats = [
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#1F4E79")),
+        ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#B7C9D6")),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 3),
+        ("RIGHTPADDING", (0,0), (-1,-1), 3),
+        ("TOPPADDING", (0,0), (-1,-1), 1.0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 1.0),
+    ]
+    for i in range(1, len(area_data)):
+        if i % 2 == 0:
+            ats.append(("BACKGROUND", (0,i), (-1,i), colors.HexColor("#EEF3F8")))
+    at.setStyle(TableStyle(ats))
+    story.append(at)
+    story.append(Spacer(1, 1.5))
+    story.append(_pdf_p("※ 채점 문항이 1~2개인 영역은 표본이 적어 판정을 '참고'로 표시합니다.", small))
+
+    story.append(_pdf_p("3. 오답 기반 진단", heading_style))
+    diag_counts = defaultdict(int)
+    for x in result["rows"]:
+        if x["mark"] == "×" and x["diagnosis"]:
+            diag_counts[x["diagnosis"]] += 1
+    if diag_counts:
+        for d, count in sorted(diag_counts.items(), key=lambda x: (-x[1], x[0]))[:8]:
+            story.append(_pdf_p(f"• {d} - 관련 오답 {count}문항", body))
+    else:
+        story.append(_pdf_p("채점된 문항에서 별도 오답 진단 항목이 없습니다.", body))
+
+    story.append(_pdf_p("4. 종합 학습 코멘트", heading_style))
+    story.append(_pdf_p(comment_text(result), body))
+
+    doc.build(story)
+    return buf.getvalue()
+
 
 
 def safe_name(s):
@@ -732,8 +922,9 @@ if run:
 
             cls = safe_name(result["class"]) if result["class"] else ""
             name = safe_name(result["name"])
-            filename = f"{cls + '_' if cls else ''}{name}_리포트.docx"
-            reports.append((filename, make_docx(exam, result)))
+            base = f"{cls + '_' if cls else ''}{name}_리포트"
+            reports.append((base + ".docx", make_docx(exam, result)))
+            reports.append((base + ".pdf", make_pdf(exam, result)))
 
             progress.progress(20 + int(75 * idx / count))
 
@@ -741,7 +932,7 @@ if run:
         st.session_state.reports = (reports, results)
         st.session_state.zip_bytes = zip_bytes
         progress.progress(100)
-        status.success(f"완료: {len(reports)}명의 Word 리포트를 만들었습니다.")
+        status.success(f"완료: {len(results)}명의 Word + PDF 리포트를 만들었습니다.")
 
     except Exception as e:
         st.exception(e)
@@ -798,7 +989,7 @@ if st.session_state.reports:
     )
 
     st.download_button(
-        "📦 모든 학생 Word 리포트 ZIP 다운로드",
+        "📦 모든 학생 Word + PDF 리포트 ZIP 다운로드",
         data=st.session_state.zip_bytes,
         file_name="학생_성취도평가_리포트.zip",
         mime="application/zip",
@@ -806,13 +997,18 @@ if st.session_state.reports:
         use_container_width=True,
     )
 
-    with st.expander("학생별 Word 파일 따로 받기"):
+    with st.expander("학생별 Word / PDF 파일 따로 받기"):
         for filename, data in reports:
+            mime = (
+                "application/pdf"
+                if filename.lower().endswith(".pdf")
+                else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
             st.download_button(
                 filename,
                 data=data,
                 file_name=filename,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                mime=mime,
                 key="download_" + filename,
             )
 
