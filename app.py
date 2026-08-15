@@ -370,7 +370,7 @@ def set_column_widths(table, widths):
 
 def heading(doc, text):
     p = doc.add_paragraph()
-    p.paragraph_format.space_before = Pt(8)
+    p.paragraph_format.space_before = Pt(9)
     p.paragraph_format.space_after = Pt(4)
     r = p.add_run(text)
     r.bold = True
@@ -416,7 +416,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(8.3)
+    normal.font.size = Pt(9.3)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -428,6 +428,9 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     r._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
 
     summary = doc.add_table(rows=2, cols=7)
+    # 가독성 개선: 번호/문항분석·정오 열은 좁게, 설명 열은 넓게
+    summary.autofit = False
+    _report_col_widths = [Cm(0.9), Cm(1.4), Cm(2.5), Cm(5.4), Cm(6.3)]
     summary.alignment = WD_TABLE_ALIGNMENT.CENTER
     headers = ["학생", "반", "채점 문항", "정답", "오답", "정답률", "채점 점수"]
     values = [
@@ -456,7 +459,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     if notes:
         p = doc.add_paragraph()
         rr = p.add_run("※ " + ", ".join(notes) + "은 정답률과 채점 가능 점수 계산에서 제외했습니다.")
-        rr.font.size = Pt(7.5)
+        rr.font.size = Pt(8.5)
 
     heading(doc, "1. 문항별 분석 및 정오표")
     tb = doc.add_table(rows=1, cols=6)
