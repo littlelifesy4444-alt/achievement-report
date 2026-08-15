@@ -494,12 +494,12 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
 
     # 번호/정오 열은 매우 좁게, 설명 열은 넓게
     col_widths = [
-        Inches(0.28),  # 번호: 숫자 폭에 가깝게 최소화
-        Inches(0.68),  # 문항 분석: 짧은 영역명 기준으로 축소
-        Inches(2.38),  # 핵심 출제 포인트: 확보된 공간 재배분
-        Inches(0.32),  # 정오: ○/×/확인 표시에 필요한 최소 폭
-        Inches(4.40),  # 분석 근거: 가장 넓게
-        Inches(2.75),  # 학생 진단
+        Inches(0.432),  # 번호 4%
+        Inches(1.081),  # 문항 분석 10%
+        Inches(3.135),  # 핵심 출제 포인트 29%
+        Inches(0.541),  # 정오 5%
+        Inches(3.243),  # 분석 근거 30%
+        Inches(2.378),  # 학생 진단 22%
     ]
     set_column_widths(tb, col_widths)
 
