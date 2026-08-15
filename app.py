@@ -27,7 +27,15 @@ MANUAL_RULES = """
 성취도평가 학생 전달용 리포트 제작 기준
 
 1. 모든 문항을 문항번호별로 분석한다.
-2. 각 문항에 '문항 분석 영역', '핵심 출제 포인트', '분석 근거'를 작성한다.
+2. 각 문항에 '문항 분석 영역', '핵심 출제 포인트'를 작성한다.
+   문항 분석 영역은 아래 7개 중 하나만 사용한다.
+   - 문장의 형식: 문장형식, 목적격보어, 사역/지각동사 구문, 가주어·문장구조 등
+   - 시제: 현재/과거/미래, 진행, 완료, 시간 부사절 등
+   - 조동사: can, may, must, should, have to, 조동사+완료형 등
+   - 수동태: be p.p., 사역/지각 구문의 수동 표현 등
+   - 준동사: to부정사, 동명사, 현재분사/과거분사, 완료부정사 등
+   - 품사·어휘: 전치사, 접속사, 동사별 어법, 어휘 결합 및 품사 구별 등
+   - 기타 문법: 위 영역으로 자연스럽게 분류되지 않는 문법
 3. 공식 정답표가 있으면 반드시 우선 적용한다.
 4. 공식 정답표가 없으면 시험지를 분석해 정답을 판단하되, 정답이 모호하거나 복수 정답 가능성이 있으면 추측하지 않고
    '확인 필요' 또는 '채점 제외'로 처리한다.
@@ -36,43 +44,44 @@ MANUAL_RULES = """
 7. 채점 제외/확인 필요 문항은 정답률 계산의 분모에서도 제외한다.
 8. 문항별 리포트는 6열 구조를 사용한다:
    번호 / 문항 분석 / 핵심 출제 포인트 / 정오 / 분석 근거 / 학생 진단
-9. 맞은 문항의 학생 진단은 공란으로 둔다.
-10. 틀린 문항의 학생 진단은 정답 자체를 알려주기보다 '시제 구별 보완 필요', '목적격보어 형태 확인 필요'처럼
+9. 번호 열과 정오 열은 매우 좁게 사용하고, 설명 열을 넓게 사용한다.
+10. 맞은 문항의 학생 진단은 공란으로 둔다.
+11. 틀린 문항의 학생 진단은 정답 자체를 알려주기보다 '시제 구별 보완 필요', '목적격보어 형태 확인 필요'처럼
     짧고 구체적인 학습 포인트를 제시한다.
-11. 서술형도 6열 구조를 유지한다.
-12. 서술형의 전체 기준답안과 학생이 작성한 전체 답안은 리포트에 공개하지 않는다.
-13. 서술형 분석 근거에는 채점에 필요한 '부분답'만 짧게 표시한다.
-14. 틀린 서술형에만 짧은 오류 진단을 작성한다.
-15. 영역별 표에는 영역 / 정답 / 채점 문항 / 정답률 / 판정을 표시한다.
-16. 강점과 보완 영역은 실제 정답률을 근거로 정한다.
-17. 오답이 집중된 영역과 상대적으로 안정적인 영역을 실제 계산 결과에서 찾는다.
-18. 종합 코멘트는 '현재 성취 수준 → 강점 → 보완 영역 → 구체적 복습 방향' 순으로 작성한다.
-19. 학생의 태도, 노력, 성격, 수업 참여도 등 답안지에서 확인할 수 없는 내용은 추정하지 않는다.
-20. 학생 간 비교나 서열 표현은 사용하지 않는다.
-21. Word 디자인:
+12. 객관식 문항의 '분석 근거' 칸은 반드시 공란으로 둔다.
+13. '분석 근거'는 서술형 문항에만 표시한다.
+14. 서술형의 전체 기준답안과 학생이 작성한 전체 답안은 리포트에 공개하지 않는다.
+15. 서술형 분석 근거에는 채점에 필요한 '부분답'만 짧게 표시한다.
+16. 틀린 서술형에만 짧은 오류 진단을 작성한다.
+17. 영역별 표에는 영역 / 정답 / 채점 문항 / 정답률 / 판정을 표시한다.
+18. 강점과 보완 영역은 실제 정답률을 근거로 정한다.
+19. 오답이 집중된 영역과 상대적으로 안정적인 영역을 실제 계산 결과에서 찾는다.
+20. 종합 코멘트는 '현재 성취 수준 → 강점 → 보완 영역 → 구체적 복습 방향' 순으로 작성한다.
+21. 학생의 태도, 노력, 성격, 수업 참여도 등 답안지에서 확인할 수 없는 내용은 추정하지 않는다.
+22. 학생 간 비교나 서열 표현은 사용하지 않는다.
+23. Word 디자인:
     - 표 헤더: 진한 파란색 + 흰 글씨
     - 본문: 옅은 교차 행 음영
     - 정오: ○ 연한 초록 / × 연한 주황·붉은색 / 채점 제외·확인 필요 연한 노랑
     - 오답 학생 진단: 연한 노랑
     - 서술형 분석 근거: 옅은 회색·파랑 계열
-    - 번호와 정오 열은 좁고 설명 열은 넓게
-22. 최종 구성:
+    - 번호와 정오 열은 매우 좁고 설명 열은 넓게
+24. 최종 구성:
     1) 문항별 분석 및 정오표
     2) 영역별 성취도
     3) 오답 기반 진단
     4) 종합 학습 코멘트
 """
 
-# ---------- Structured outputs ----------
 class QuestionAnalysis(BaseModel):
     number: int
     question_type: Literal["objective", "subjective"]
     points: float = Field(description="문항 배점. 시험지에서 확인 불가하면 0.")
-    area: str
+    area: Literal["문장의 형식", "시제", "조동사", "수동태", "준동사", "품사·어휘", "기타 문법"]
     point: str
     answer_status: Literal["certain", "confirm", "exclude"]
     correct_answer: str = Field(description="객관식 정답 번호 또는 서술형 채점에 필요한 부분답만. 전체 정답문장 금지.")
-    evidence: str = Field(description="리포트에 쓸 짧은 분석 근거. 전체 문제나 전체 정답 문장을 재현하지 말 것.")
+    evidence: str = Field(description="서술형 리포트에 쓸 짧은 부분답 근거. 객관식은 내부 분석용으로만 사용 가능.")
     wrong_diagnosis: str = Field(description="이 문항을 틀렸을 때 쓸 짧은 학습 진단.")
 
 class ExamAnalysis(BaseModel):
@@ -85,7 +94,7 @@ class ExamAnalysis(BaseModel):
 class GradeItem(BaseModel):
     number: int
     result: Literal["correct", "wrong", "confirm", "exclude"]
-    evidence: str = Field(description="채점에 필요한 짧은 부분 근거. 학생 전체 답안 재현 금지.")
+    evidence: str = Field(description="서술형 채점에 필요한 짧은 부분 근거. 학생 전체 답안 재현 금지.")
     diagnosis: str = Field(description="wrong일 때만 짧고 구체적 진단. correct일 때 빈 문자열.")
 
 class StudentGrading(BaseModel):
@@ -176,6 +185,7 @@ def grade_student(api_key: str, exam: ExamAnalysis, answer_file) -> StudentGradi
           "- 학생 답안이 안 보이거나 판독이 불확실하면 추측하지 말고 confirm.\n"
           "- correct 문항의 diagnosis는 반드시 빈 문자열.\n"
           "- wrong 문항의 diagnosis는 짧고 구체적인 학습 포인트.\n"
+          "- 객관식의 evidence는 리포트에 표시하지 않는다.\n"
           "- 서술형 evidence에 학생의 전체 답안을 옮기지 말고 채점에 필요한 부분만 표시.\n"
           "- 학생 이름/반은 답안지와 파일명에서 확인되는 정보만 사용."
     )
@@ -204,7 +214,6 @@ def grade_student(api_key: str, exam: ExamAnalysis, answer_file) -> StudentGradi
     return result
 
 
-# ---------- Deterministic calculations ----------
 def judgment(rate: float) -> str:
     if rate >= 90:
         return "매우 우수"
@@ -263,13 +272,16 @@ def calculate(exam: ExamAnalysis, grading: StudentGrading):
                 areas[q.area]["correct"] += 1
                 areas[q.area]["score"] += pts
 
-        evidence = q.evidence
-        diagnosis = q.wrong_diagnosis
-        if item:
-            if item.evidence.strip():
+        # 객관식 분석근거는 최종 리포트에서 사용하지 않음
+        evidence = ""
+        if q.question_type == "subjective":
+            evidence = q.evidence
+            if item and item.evidence.strip():
                 evidence = item.evidence.strip()
-            if item.diagnosis.strip():
-                diagnosis = item.diagnosis.strip()
+
+        diagnosis = q.wrong_diagnosis
+        if item and item.diagnosis.strip():
+            diagnosis = item.diagnosis.strip()
         if mark == "○":
             diagnosis = ""
 
@@ -316,7 +328,6 @@ def calculate(exam: ExamAnalysis, grading: StudentGrading):
     }
 
 
-# ---------- Word generation ----------
 def shade(cell, fill):
     tcPr = cell._tc.get_or_add_tcPr()
     shd = tcPr.find(qn("w:shd"))
@@ -348,6 +359,13 @@ def repeat_header(row):
     h = OxmlElement("w:tblHeader")
     h.set(qn("w:val"), "true")
     trPr.append(h)
+
+
+def set_column_widths(table, widths):
+    table.autofit = False
+    for row in table.rows:
+        for idx, width in enumerate(widths):
+            row.cells[idx].width = width
 
 
 def heading(doc, text):
@@ -392,8 +410,8 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     sec = doc.sections[0]
     sec.top_margin = Inches(0.48)
     sec.bottom_margin = Inches(0.48)
-    sec.left_margin = Inches(0.48)
-    sec.right_margin = Inches(0.48)
+    sec.left_margin = Inches(0.42)
+    sec.right_margin = Inches(0.42)
 
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
@@ -443,21 +461,36 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     heading(doc, "1. 문항별 분석 및 정오표")
     tb = doc.add_table(rows=1, cols=6)
     tb.alignment = WD_TABLE_ALIGNMENT.CENTER
+    tb.autofit = False
+
+    # 번호/정오 열은 매우 좁게, 설명 열은 넓게
+    col_widths = [
+        Inches(0.38),  # 번호
+        Inches(1.15),  # 문항 분석
+        Inches(2.05),  # 핵심 출제 포인트
+        Inches(0.42),  # 정오
+        Inches(1.45),  # 분석 근거
+        Inches(1.85),  # 학생 진단
+    ]
+    set_column_widths(tb, col_widths)
+
     hdr = ["번호", "문항 분석", "핵심 출제 포인트", "정오", "분석 근거", "학생 진단"]
     for i, h in enumerate(hdr):
         cell_text(tb.cell(0, i), h, bold=True, color=(255, 255, 255),
-                  align=WD_ALIGN_PARAGRAPH.CENTER, size=7.1)
+                  align=WD_ALIGN_PARAGRAPH.CENTER, size=7.0)
         shade(tb.cell(0, i), "1F4E79")
     repeat_header(tb.rows[0])
 
     for idx, rowdata in enumerate(result["rows"], 1):
         row = tb.add_row().cells
+        # 객관식 분석근거는 무조건 공란 / 서술형만 표시
+        evidence_to_show = rowdata["evidence"] if rowdata["question_type"] == "subjective" else ""
         vals = [
             rowdata["number"],
             rowdata["area"],
             rowdata["point"],
             rowdata["mark"],
-            rowdata["evidence"],
+            evidence_to_show,
             rowdata["diagnosis"],
         ]
         for j, v in enumerate(vals):
@@ -465,8 +498,10 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
                 row[j],
                 v,
                 align=WD_ALIGN_PARAGRAPH.CENTER if j in (0, 3) else WD_ALIGN_PARAGRAPH.LEFT,
-                size=6.8,
+                size=6.8 if j not in (0,3) else 7.2,
             )
+            row[j].width = col_widths[j]
+
         if idx % 2 == 0:
             for c in row:
                 shade(c, "F4F7FA")
@@ -477,7 +512,9 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
             shade(row[5], "FFF2CC")
         else:
             shade(row[3], "FFF2CC")
-        if rowdata["question_type"] == "subjective":
+
+        # 서술형 분석근거 칸만 옅은 파랑
+        if rowdata["question_type"] == "subjective" and evidence_to_show:
             shade(row[4], "DDEBF7")
 
     heading(doc, "2. 영역별 성취도")
@@ -536,7 +573,6 @@ def reports_zip(reports: list[tuple[str, bytes]], exam: ExamAnalysis) -> bytes:
     return out.getvalue()
 
 
-# ---------- Streamlit UI ----------
 st.set_page_config(
     page_title="성취도평가 리포트",
     page_icon="📘",
@@ -666,7 +702,7 @@ if st.session_state.exam_analysis is not None:
                     "영역": q.area,
                     "출제 포인트": q.point,
                     "정답 상태": q.answer_status,
-                    "분석 근거": q.evidence,
+                    "분석 근거": q.evidence if q.question_type == "subjective" else "",
                 }
                 for q in exam.questions
             ],
