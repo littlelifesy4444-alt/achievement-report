@@ -28,14 +28,6 @@ MANUAL_RULES = """
 
 1. 모든 문항을 문항번호별로 분석한다.
 2. 각 문항에 '문항 분석 영역', '핵심 출제 포인트'를 작성한다.
-   문항 분석 영역은 아래 7개 중 하나만 사용한다.
-   - 문장의 형식: 문장형식, 목적격보어, 사역/지각동사 구문, 가주어·문장구조 등
-   - 시제: 현재/과거/미래, 진행, 완료, 시간 부사절 등
-   - 조동사: can, may, must, should, have to, 조동사+완료형 등
-   - 수동태: be p.p., 사역/지각 구문의 수동 표현 등
-   - 준동사: to부정사, 동명사, 현재분사/과거분사, 완료부정사 등
-   - 품사·어휘: 전치사, 접속사, 동사별 어법, 어휘 결합 및 품사 구별 등
-   - 기타 문법: 위 영역으로 자연스럽게 분류되지 않는 문법
 3. 공식 정답표가 있으면 반드시 우선 적용한다.
 4. 공식 정답표가 없으면 시험지를 분석해 정답을 판단하되, 정답이 모호하거나 복수 정답 가능성이 있으면 추측하지 않고
    '확인 필요' 또는 '채점 제외'로 처리한다.
@@ -77,7 +69,7 @@ class QuestionAnalysis(BaseModel):
     number: int
     question_type: Literal["objective", "subjective"]
     points: float = Field(description="문항 배점. 시험지에서 확인 불가하면 0.")
-    area: Literal["문장의 형식", "시제", "조동사", "수동태", "준동사", "품사·어휘", "기타 문법"]
+    area: str
     point: str
     answer_status: Literal["certain", "confirm", "exclude"]
     correct_answer: str = Field(description="객관식 정답 번호 또는 서술형 채점에 필요한 부분답만. 전체 정답문장 금지.")
@@ -370,7 +362,7 @@ def set_column_widths(table, widths):
 
 def heading(doc, text):
     p = doc.add_paragraph()
-    p.paragraph_format.space_before = Pt(9)
+    p.paragraph_format.space_before = Pt(8)
     p.paragraph_format.space_after = Pt(4)
     r = p.add_run(text)
     r.bold = True
@@ -416,7 +408,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     normal = doc.styles["Normal"]
     normal.font.name = "Malgun Gothic"
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(9.3)
+    normal.font.size = Pt(8.3)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -428,9 +420,6 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     r._element.rPr.rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
 
     summary = doc.add_table(rows=2, cols=7)
-    # 가독성 개선: 번호/문항분석·정오 열은 좁게, 설명 열은 넓게
-    summary.autofit = False
-    _report_col_widths = [Cm(0.9), Cm(1.4), Cm(2.5), Cm(5.4), Cm(6.3)]
     summary.alignment = WD_TABLE_ALIGNMENT.CENTER
     headers = ["학생", "반", "채점 문항", "정답", "오답", "정답률", "채점 점수"]
     values = [
@@ -459,7 +448,7 @@ def make_docx(exam: ExamAnalysis, result) -> bytes:
     if notes:
         p = doc.add_paragraph()
         rr = p.add_run("※ " + ", ".join(notes) + "은 정답률과 채점 가능 점수 계산에서 제외했습니다.")
-        rr.font.size = Pt(8.5)
+        rr.font.size = Pt(7.5)
 
     heading(doc, "1. 문항별 분석 및 정오표")
     tb = doc.add_table(rows=1, cols=6)
