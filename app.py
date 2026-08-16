@@ -307,7 +307,7 @@ def calculate(exam: ExamAnalysis, grading: StudentGrading):
         if item and item.diagnosis.strip():
             diagnosis = item.diagnosis.strip()
         if mark == "○":
-            diagnosis = ""
+            diagnosis = "정답"
 
         rows.append(
             {
